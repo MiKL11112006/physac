@@ -1,36 +1,32 @@
 /*******************************************************************************************
 *
-*   Physac - Physics movement
+*   raylib [physac] example - physics movement
 *
-*   NOTE 1: Physac requires multi-threading, when InitPhysics() a second thread 
-*           is created to manage physics calculations.
-*   NOTE 2: Physac requires static C library linkage to avoid dependency 
-*           on MinGW DLL (-static -lpthread)
+*   This example has been created using raylib 1.5 (www.raylib.com)
+*   raylib is licensed under an unmodified zlib/libpng license (View raylib.h for details)
 *
-*   Compile this program using:
-*       gcc -o $(NAME_PART).exe $(FILE_NAME) -s ..\icon\physac_icon -I. -I../src 
-*           -I../src/external/raylib/src -static -lraylib -lopengl32 -lgdi32 -pthread -std=c99
-*   
-*   Copyright (c) 2016-2020 Victor Fisac (github: @victorfisac)
+*   This example uses physac 1.1 (https://github.com/raysan5/raylib/blob/master/src/physac.h)
+*
+*   Copyright (c) 2016-2021 Victor Fisac (@victorfisac) and Ramon Santamaria (@raysan5)
 *
 ********************************************************************************************/
 
 #include "raylib.h"
 
 #define PHYSAC_IMPLEMENTATION
-#include "physac.h"
+#include "extras/physac.h"
 
 #define VELOCITY    0.5f
 
-int main()
+int main(void)
 {
     // Initialization
     //--------------------------------------------------------------------------------------
-    int screenWidth = 800;
-    int screenHeight = 450;
+    const int screenWidth = 800;
+    const int screenHeight = 450;
 
     SetConfigFlags(FLAG_MSAA_4X_HINT);
-    InitWindow(screenWidth, screenHeight, "[physac] - Body controller demo");
+    InitWindow(screenWidth, screenHeight, "raylib [physac] example - physics movement");
 
     // Physac logo drawing position
     int logoX = screenWidth - MeasureText("Physac", 30) - 10;
@@ -40,11 +36,11 @@ int main()
     InitPhysics();
 
     // Create floor and walls rectangle physics body
-    PhysicsBody floor = CreatePhysicsBodyRectangle((Vector2){ screenWidth/2, screenHeight }, screenWidth, 100, 10);
+    PhysicsBody floor = CreatePhysicsBodyRectangle((Vector2){ screenWidth/2.0f, (float)screenHeight }, (float)screenWidth, 100, 10);
     PhysicsBody platformLeft = CreatePhysicsBodyRectangle((Vector2){ screenWidth*0.25f, screenHeight*0.6f }, screenWidth*0.25f, 10, 10);
     PhysicsBody platformRight = CreatePhysicsBodyRectangle((Vector2){ screenWidth*0.75f, screenHeight*0.6f }, screenWidth*0.25f, 10, 10);
-    PhysicsBody wallLeft = CreatePhysicsBodyRectangle((Vector2){ -5, screenHeight/2 }, 10, screenHeight, 10);
-    PhysicsBody wallRight = CreatePhysicsBodyRectangle((Vector2){ screenWidth + 5, screenHeight/2 }, 10, screenHeight, 10);
+    PhysicsBody wallLeft = CreatePhysicsBodyRectangle((Vector2){ -5, screenHeight/2.0f }, 10, (float)screenHeight, 10);
+    PhysicsBody wallRight = CreatePhysicsBodyRectangle((Vector2){ (float)screenWidth + 5, screenHeight/2.0f }, 10, (float)screenHeight, 10);
 
     // Disable dynamics to floor and walls physics bodies
     floor->enabled = false;
@@ -54,10 +50,10 @@ int main()
     wallRight->enabled = false;
 
     // Create movement physics body
-    PhysicsBody body = CreatePhysicsBodyRectangle((Vector2){ screenWidth/2, screenHeight/2 }, 50, 50, 1);
-    body->freezeOrient = true;  // Constrain body rotation to avoid little collision torque amounts
-    
-    SetTargetFPS(60);
+    PhysicsBody body = CreatePhysicsBodyRectangle((Vector2){ screenWidth/2.0f, screenHeight/2.0f }, 50, 50, 1);
+    body->freezeOrient = true;      // Constrain body rotation to avoid little collision torque amounts
+
+    SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
     // Main game loop
@@ -65,15 +61,22 @@ int main()
     {
         // Update
         //----------------------------------------------------------------------------------
+        UpdatePhysics();              // Update physics system
+
+        if (IsKeyPressed(KEY_R))      // Reset physics input
+        {
+            // Reset movement physics body position, velocity and rotation
+            body->position = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
+            body->velocity = (Vector2){ 0, 0 };
+            SetPhysicsBodyRotation(body, 0);
+        }
+
         // Horizontal movement input
-        if (IsKeyDown(KEY_RIGHT))
-            body->velocity.x = VELOCITY;
-        else if (IsKeyDown(KEY_LEFT))
-            body->velocity.x = -VELOCITY;
+        if (IsKeyDown(KEY_RIGHT)) body->velocity.x = VELOCITY;
+        else if (IsKeyDown(KEY_LEFT)) body->velocity.x = -VELOCITY;
 
         // Vertical movement input checking if player physics body is grounded
-        if (IsKeyDown(KEY_UP) && body->isGrounded)
-            body->velocity.y = -VELOCITY*4;
+        if (IsKeyDown(KEY_UP) && body->isGrounded) body->velocity.y = -VELOCITY*4;
         //----------------------------------------------------------------------------------
 
         // Draw
@@ -105,6 +108,7 @@ int main()
             }
 
             DrawText("Use 'ARROWS' to move player", 10, 10, 10, WHITE);
+            DrawText("Press 'R' to reset example", 10, 30, 10, WHITE);
 
             DrawText("Physac", logoX, logoY, 30, WHITE);
             DrawText("Powered by", logoX + 50, logoY - 7, 10, WHITE);
@@ -114,9 +118,9 @@ int main()
     }
 
     // De-Initialization
-    //--------------------------------------------------------------------------------------   
+    //--------------------------------------------------------------------------------------
     ClosePhysics();       // Unitialize physics
-    
+
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 

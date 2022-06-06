@@ -1,34 +1,30 @@
 /*******************************************************************************************
 *
-*   Physac - Physics friction
+*   raylib [physac] example - physics friction
 *
-*   NOTE 1: Physac requires multi-threading, when InitPhysics() a second thread 
-*           is created to manage physics calculations.
-*   NOTE 2: Physac requires static C library linkage to avoid dependency 
-*           on MinGW DLL (-static -lpthread)
+*   This example has been created using raylib 1.5 (www.raylib.com)
+*   raylib is licensed under an unmodified zlib/libpng license (View raylib.h for details)
 *
-*   Compile this program using:
-*       gcc -o $(NAME_PART).exe $(FILE_NAME) -s ..\icon\physac_icon -I. -I../src 
-*           -I../src/external/raylib/src -static -lraylib -lopengl32 -lgdi32 -pthread -std=c99
-*   
-*   Copyright (c) 2016-2020 Victor Fisac (github: @victorfisac)
+*   This example uses physac 1.1 (https://github.com/raysan5/raylib/blob/master/src/physac.h)
+*
+*   Copyright (c) 2016-2021 Victor Fisac (@victorfisac) and Ramon Santamaria (@raysan5)
 *
 ********************************************************************************************/
 
 #include "raylib.h"
 
 #define PHYSAC_IMPLEMENTATION
-#include "physac.h"
+#include "extras/physac.h"
 
-int main()
+int main(void)
 {
     // Initialization
     //--------------------------------------------------------------------------------------
-    int screenWidth = 800;
-    int screenHeight = 450;
+    const int screenWidth = 800;
+    const int screenHeight = 450;
 
     SetConfigFlags(FLAG_MSAA_4X_HINT);
-    InitWindow(screenWidth, screenHeight, "[physac] Friction demo");
+    InitWindow(screenWidth, screenHeight, "raylib [physac] example - physics friction");
 
     // Physac logo drawing position
     int logoX = screenWidth - MeasureText("Physac", 30) - 10;
@@ -38,18 +34,18 @@ int main()
     InitPhysics();
 
     // Create floor rectangle physics body
-    PhysicsBody floor = CreatePhysicsBodyRectangle((Vector2){ screenWidth/2, screenHeight }, screenWidth, 100, 10);
+    PhysicsBody floor = CreatePhysicsBodyRectangle((Vector2){ screenWidth/2.0f, (float)screenHeight }, (float)screenWidth, 100, 10);
     floor->enabled = false; // Disable body state to convert it to static (no dynamics, but collisions)
-    PhysicsBody wall = CreatePhysicsBodyRectangle((Vector2){ screenWidth/2, screenHeight*0.8f }, 10, 80, 10);
+    PhysicsBody wall = CreatePhysicsBodyRectangle((Vector2){ screenWidth/2.0f, screenHeight*0.8f }, 10, 80, 10);
     wall->enabled = false; // Disable body state to convert it to static (no dynamics, but collisions)
 
     // Create left ramp physics body
-    PhysicsBody rectLeft = CreatePhysicsBodyRectangle((Vector2){ 25, screenHeight - 5 }, 250, 250, 10);
+    PhysicsBody rectLeft = CreatePhysicsBodyRectangle((Vector2){ 25, (float)screenHeight - 5 }, 250, 250, 10);
     rectLeft->enabled = false; // Disable body state to convert it to static (no dynamics, but collisions)
     SetPhysicsBodyRotation(rectLeft, 30*DEG2RAD);
 
     // Create right ramp  physics body
-    PhysicsBody rectRight = CreatePhysicsBodyRectangle((Vector2){ screenWidth - 25, screenHeight - 5 }, 250, 250, 10);
+    PhysicsBody rectRight = CreatePhysicsBodyRectangle((Vector2){ (float)screenWidth - 25, (float)screenHeight - 5 }, 250, 250, 10);
     rectRight->enabled = false; // Disable body state to convert it to static (no dynamics, but collisions)
     SetPhysicsBodyRotation(rectRight, 330*DEG2RAD);
 
@@ -59,12 +55,12 @@ int main()
     bodyA->dynamicFriction = 0.1f;
     SetPhysicsBodyRotation(bodyA, 30*DEG2RAD);
 
-    PhysicsBody bodyB = CreatePhysicsBodyRectangle((Vector2){ screenWidth - 35, screenHeight*0.6f }, 40, 40, 10);
-    bodyB->staticFriction = 1;
-    bodyB->dynamicFriction = 1;
+    PhysicsBody bodyB = CreatePhysicsBodyRectangle((Vector2){ (float)screenWidth - 35, (float)screenHeight*0.6f }, 40, 40, 10);
+    bodyB->staticFriction = 1.0f;
+    bodyB->dynamicFriction = 1.0f;
     SetPhysicsBodyRotation(bodyB, 330*DEG2RAD);
 
-    SetTargetFPS(60);
+    SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
     // Main game loop
@@ -72,7 +68,21 @@ int main()
     {
         // Update
         //----------------------------------------------------------------------------------
-        // ...
+        UpdatePhysics();            // Update physics system
+
+        if (IsKeyPressed(KEY_R))    // Reset physics system
+        {
+            // Reset dynamic physics bodies position, velocity and rotation
+            bodyA->position = (Vector2){ 35, screenHeight*0.6f };
+            bodyA->velocity = (Vector2){ 0, 0 };
+            bodyA->angularVelocity = 0;
+            SetPhysicsBodyRotation(bodyA, 30*DEG2RAD);
+
+            bodyB->position = (Vector2){ (float)screenWidth - 35, screenHeight * 0.6f };
+            bodyB->velocity = (Vector2){ 0, 0 };
+            bodyB->angularVelocity = 0;
+            SetPhysicsBodyRotation(bodyB, 330*DEG2RAD);
+        }
         //----------------------------------------------------------------------------------
 
         // Draw
@@ -108,9 +118,11 @@ int main()
 
             DrawRectangle(0, screenHeight - 49, screenWidth, 49, BLACK);
 
-            DrawText("Friction amount", (screenWidth - MeasureText("Friction amount", 30))/2, 75, 30, WHITE);
-            DrawText("0.1", bodyA->position.x - MeasureText("0.1", 20)/2, bodyA->position.y - 7, 20, WHITE);
-            DrawText("1", bodyB->position.x - MeasureText("1", 20)/2, bodyB->position.y - 7, 20, WHITE);
+            DrawText("Friction amount", (screenWidth - MeasureText("Friction amount", 30))/2.0f, 75, 30, WHITE);
+            DrawText("0.1", (int)bodyA->position.x - MeasureText("0.1", 20)/2, (int)bodyA->position.y - 7, 20, WHITE);
+            DrawText("1", (int)bodyB->position.x - MeasureText("1", 20)/2, (int)bodyB->position.y - 7, 20, WHITE);
+
+            DrawText("Press 'R' to reset example", 10, 10, 10, WHITE);
 
             DrawText("Physac", logoX, logoY, 30, WHITE);
             DrawText("Powered by", logoX + 50, logoY - 7, 10, WHITE);
@@ -120,9 +132,9 @@ int main()
     }
 
     // De-Initialization
-    //--------------------------------------------------------------------------------------   
+    //--------------------------------------------------------------------------------------
     ClosePhysics();       // Unitialize physics
-    
+
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 
